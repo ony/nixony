@@ -19,6 +19,12 @@ in {
       description = "coc-nvim package to use as plugin in neovim";
     };
 
+    nodePackage = mkOption {
+      type = types.package;
+      default = pkgs.nodejs-slim_latest;
+      description = "NodeJS package to use in neovim for coc plugin";
+    };
+
     codeLens.enable = mkEnableOption "CodeLenses";
     virtualText.enable = mkEnableOption "VirtualText to display diagnostics" // {
       default = cfg.codeLens.enable;
@@ -54,5 +60,8 @@ in {
       builtins.toJSON (managedSettings // cfg.extraSettings);
 
     programs.neovim.plugins = [ cfg.pluginPackage ];
+    programs.neovim.extraPackages = mkIf (cfg.nodePackage != null) [
+      cfg.nodePackage
+    ];
   };
 }
