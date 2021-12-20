@@ -6,6 +6,7 @@
   outputs = { self, nixpkgs, flake-utils }: {
     homeManagerModules = {
       neovim-coc = import ./home/modules/neovim-coc.nix;
+      neovim-tree-sitter = import ./home/modules/neovim-tree-sitter.nix;
     };
   }
   //
