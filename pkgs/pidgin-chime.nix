@@ -5,6 +5,7 @@
 }:
 let
   python' = python3.withPackages (ps: [ ps.dbus-python ]);
+  pidginMajorVersion = "2";
 in stdenv.mkDerivation rec {
   pname = "pidgin-chime";
   version = "1.3-20210430";
@@ -31,7 +32,7 @@ in stdenv.mkDerivation rec {
   postPatch = ''
     sed -i \
       -e "s@^\\(pidgin_datadir\\)=.*\$@\\1=$out/share@" \
-      -e "s@^\\(purple_plugindir\\)=.*\$@\\1=$out/lib/purple-${pidgin.majorVersion}@" \
+      -e "s@^\\(purple_plugindir\\)=.*\$@\\1=$out/lib/purple-${pidginMajorVersion}@" \
       -e "s@^\\(pidgin_plugindir\\)=.*\$@\\1=$out/lib/pidgin@" \
       -e "s@^\\(gstplugindir\\)=.*\$@\\1=$out/lib/gstreamer-1.0@" \
       -e "s@^\\(fsplugindir\\)=.*\$@\\1=$out/lib/farstream-0.2@" \
