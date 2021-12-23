@@ -1,0 +1,45 @@
+#!/usr/bin/env nix-script-haskell
+#!haskellPackages optparse-applicative
+
+-- While waiting for https://github.com/BrianHicks/nix-script/issues/24
+
+import Data.List
+import Data.Maybe
+import Options.Applicative
+import System.Environment
+import System.Exit
+import System.Process
+
+optionsParser :: ParserInfo (FilePath, [String])
+optionsParser =
+    info
+        ( (,)
+            <$> strArgument (metavar "SCRIPT" <> help "Path to script to run")
+            <*> many (strArgument (metavar "ARGS" <> help "Arguments to pass to your script"))
+        )
+        ( fullDesc
+            <> progDesc "Same as nix-script-haskell, but for Ruby"
+            <> forwardOptions <> noIntersperse  -- allow passing --flags like options in args
+        )
+
+main :: IO ()
+main = do
+    (target, args) <- execParser optionsParser
+    rubyPackages <- getRubyPackages target
+    setEnv "BUILD_COMMAND" "chmod +x $SCRIPT_FILE"
+    setEnv "RUNTIME_INPUTS" . unwords $
+        ["(ruby.withPackages (ps: with ps; ["] ++ rubyPackages ++ ["]))"]
+    setEnv "INTERPETER" "ruby"
+    execProc "nix-script" (target:args)
+
+execProc :: FilePath -> [String] -> IO ()
+execProc cmd args = do
+    (_, _, _, ph) <- createProcess (proc cmd args){ delegate_ctlc = True }
+    waitForProcess ph >>= exitWith
+
+getRubyPackages :: FilePath -> IO [String]
+getRubyPackages target = do
+    headerLines <- takeWhile ("#!" `isPrefixOf`) . lines <$> readFile target
+    return $ mapMaybe (stripPrefix "#!rubyPackages ") headerLines
+
+-- ex:ft=haskell
