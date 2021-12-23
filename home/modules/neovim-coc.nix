@@ -2,17 +2,15 @@
 { config, pkgs, lib ? pkgs.lib, ... }:
 with lib;
 let
-  cfg = config.neovim.coc;
+  oldCfg = config.neovim.coc;
+  cfg = config.programs.neovim.coc;
   managedSettings = {
-    inherit (cfg) languageserver;
-    "codeLens.enable" = cfg.codeLens.enable;
-    "virtualText.enable" = cfg.virtualText.enable;
+    inherit (oldCfg) languageserver;
+    "codeLens.enable" = oldCfg.codeLens.enable;
+    "virtualText.enable" = oldCfg.virtualText.enable;
   };
-  overrddenSettings = builtins.intersectAttrs managedSettings cfg.extraSettings;
-in {
-  options.neovim.coc = {
-    enable = mkEnableOption "Conquer of Completion";
-
+  overrddenSettings = builtins.intersectAttrs managedSettings oldCfg.extraSettings;
+  sharedOptions = {
     pluginPackage = mkOption {
       type = types.package;
       default = pkgs.vimPlugins.coc-nvim;
@@ -24,10 +22,16 @@ in {
       default = pkgs.nodejs-slim_latest;
       description = "NodeJS package to use in neovim for coc plugin";
     };
+  };
+in
+{
+  options.programs.neovim.coc = sharedOptions;
+  options.neovim.coc = sharedOptions // {
+    enable = mkEnableOption "Conquer of Completion";
 
     codeLens.enable = mkEnableOption "CodeLenses";
     virtualText.enable = mkEnableOption "VirtualText to display diagnostics" // {
-      default = cfg.codeLens.enable;
+      default = oldCfg.codeLens.enable;
     };
 
     languageserver = mkOption {
@@ -43,25 +47,30 @@ in {
     };
   };
 
-  config = mkIf cfg.enable {
+  config = {
     assertions = [{
-      assertion = cfg.codeLens.enable -> cfg.virtualText.enable;
+      assertion = oldCfg.enable && oldCfg.codeLens.enable -> oldCfg.virtualText.enable;
       message = "CodeLenses feature require VirtualText";
     }];
 
     warnings = flatten [
-      (optional (overrddenSettings != {})
-      "neovim.coc.extraSettings clashing: ${builtins.toJSON overrddenSettings}")
-      (optional (!config.programs.neovim.enable)
-      "consider setting program.neovim.enable to true for neovim.coc to be effective")
+      (optional oldCfg.enable
+        "Use programs.neovim.coc instead of neovim.coc")
+      (optional (oldCfg.enable && overrddenSettings != { })
+        "neovim.coc.extraSettings clashing: ${builtins.toJSON overrddenSettings}")
     ];
 
-    xdg.configFile."nvim/coc-settings.json".text =
-      builtins.toJSON (managedSettings // cfg.extraSettings);
+    programs.neovim.coc = mkIf oldCfg.enable {
+      enable = true;
+      settings = managedSettings // oldCfg.extraSettings;
+    };
 
-    programs.neovim.plugins = [ cfg.pluginPackage ];
-    programs.neovim.extraPackages = mkIf (cfg.nodePackage != null) [
-      cfg.nodePackage
+    # Even that HM includes adding coc-nvim plugin, it is not effective from there.
+    programs.neovim.plugins = optionals cfg.enable [ oldCfg.pluginPackage ];
+
+    # coc uses javascript
+    programs.neovim.extraPackages = optionals (cfg.enable && cfg.nodePackage != null) [
+      oldCfg.nodePackage
     ];
   };
 }
