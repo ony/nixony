@@ -10,11 +10,12 @@ import System.Environment
 import System.Exit
 import System.Process
 
-optionsParser :: ParserInfo (FilePath, [String])
+optionsParser :: ParserInfo (Bool, FilePath, [String])
 optionsParser =
     info
-        ( (,)
-            <$> strArgument (metavar "SCRIPT" <> help "Path to script to run")
+        ( (,,)
+            <$> switch (long "shell" <> help "Enter a shell with all script dependencies")
+            <*> strArgument (metavar "SCRIPT" <> help "Path to script to run")
             <*> many (strArgument (metavar "ARGS" <> help "Arguments to pass to your script"))
         )
         ( fullDesc
@@ -24,13 +25,17 @@ optionsParser =
 
 main :: IO ()
 main = do
-    (target, args) <- execParser optionsParser
+    (shellMode, target, args) <- execParser optionsParser
     rubyPackages <- getRubyPackages target
     setEnv "BUILD_COMMAND" "chmod +x $SCRIPT_FILE"
     setEnv "RUNTIME_INPUTS" . unwords $
         ["(ruby.withPackages (ps: with ps; ["] ++ rubyPackages ++ ["]))"]
-    setEnv "INTERPETER" "ruby"
-    execProc "nix-script" (target:args)
+    if shellMode
+        then do
+            execProc "nix-script" ("--shell":target:args)
+        else do
+            setEnv "INTERPETER" "ruby"
+            execProc "nix-script" (target:args)
 
 execProc :: FilePath -> [String] -> IO ()
 execProc cmd args = do
