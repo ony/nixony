@@ -11,12 +11,6 @@ let
   };
   overrddenSettings = builtins.intersectAttrs managedSettings oldCfg.extraSettings;
   sharedOptions = {
-    pluginPackage = mkOption {
-      type = types.package;
-      default = pkgs.vimPlugins.coc-nvim;
-      description = "coc-nvim package to use as plugin in neovim";
-    };
-
     nodePackage = mkOption {
       type = types.package;
       default = pkgs.nodejs-slim_latest;
@@ -64,9 +58,6 @@ in
       enable = true;
       settings = managedSettings // oldCfg.extraSettings;
     };
-
-    # Even that HM includes adding coc-nvim plugin, it is not effective from there.
-    programs.neovim.plugins = optionals cfg.enable [ oldCfg.pluginPackage ];
 
     # coc uses javascript
     programs.neovim.extraPackages = optionals (cfg.enable && cfg.nodePackage != null) [
