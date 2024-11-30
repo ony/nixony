@@ -2,7 +2,6 @@
   description = "Cherry-picked components from ony's Nix configs";
 
   inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.flake-utils.inputs.nixpkgs.follows = "nixpkgs";
 
   outputs = { self, nixpkgs, flake-utils }: {
     overlay = final: prev: {
