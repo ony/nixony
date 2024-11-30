@@ -3,16 +3,52 @@
 
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
-  outputs = { self, nixpkgs, flake-utils }: {
-    overlay = final: prev: {
-      unionfarm = final.pkgs.callPackage ./pkgs/unionfarm.nix { };
-      pidgin-chime = final.pkgs.callPackage ./pkgs/pidgin-chime.nix { };
-      overlayfs-tools = final.pkgs.callPackage ./pkgs/overlayfs-tools.nix { };
-      nix-script-ruby = final.pkgs.writeScriptBin "nix-script-ruby"
+  outputs = { self, nixpkgs, flake-utils }:
+  let
+    inherit (builtins) mapAttrs isAttrs isFunction;
+    inherit (nixpkgs.lib.attrsets) isDerivation concatMapAttrs;
+
+    # Converts attrset of form:
+    # {
+    #   pkg = final: final.pkgs.callPackage ...;
+    #   pkgset = {
+    #     subpkg = final: final.pkgs.callPackage ...;
+    #     subpkgset = { ... };
+    #   };
+    # }
+    # To:
+    # final: prev: {
+    #   pkg = final.pkgs.callPackage ...;
+    #   pkgset = prev.pkgset // {
+    #     subpkg = final.pkgs.callPackage ...;
+    #     subpkgset = prev.pkgset.subpkgset // { ... };
+    #   };
+    # }
+    toOverlay = attrs@{...}: final: prev:
+      let
+        walkIn = nestedPrev: attrs: mapAttrs (toValue nestedPrev) attrs;
+        toValue = nestedPrev: name: value:
+          if isFunction value then value final
+          else if isDerivation value then value
+          else if isAttrs value then nestedPrev.${name} // walkIn nestedPrev.${name} value
+          else value;
+      in walkIn prev attrs;
+
+    toPackages = attrs@{...}: pkgset:
+      mapAttrs (name: value:
+          if isAttrs value && ! isDerivation value then toPackages value pkgset.${name}
+          else pkgset.${name}
+      ) attrs;
+
+    pkgDefs = {
+      unionfarm = final: final.pkgs.callPackage ./pkgs/unionfarm.nix { };
+      pidgin-chime = final: final.pkgs.callPackage ./pkgs/pidgin-chime.nix { };
+      overlayfs-tools = final: final.pkgs.callPackage ./pkgs/overlayfs-tools.nix { };
+      nix-script-ruby = final: final.pkgs.writeScriptBin "nix-script-ruby"
         (builtins.readFile ./scripts/nix-script-ruby);
 
-      vimPlugins = prev.vimPlugins // {
-        nvim-treesitter-playground = final.pkgs.vimUtils.buildVimPlugin {
+      vimPlugins = {
+        nvim-treesitter-playground = final: final.pkgs.vimUtils.buildVimPlugin {
           name = "nvim-treesitter-playground";
           src = final.pkgs.fetchFromGitHub {
             owner = "nvim-treesitter";
@@ -22,7 +58,7 @@
           };
         };
 
-        nvim-spellsitter = final.pkgs.vimUtils.buildVimPlugin {
+        nvim-spellsitter = final: final.pkgs.vimUtils.buildVimPlugin {
           name = "nvim-spellsitter";
           dontBuild = true;
           src = final.pkgs.fetchFromGitHub {
@@ -34,6 +70,8 @@
         };
       };
     };
+  in {
+    overlay = toOverlay pkgDefs;
     homeManagerModules = {
       neovim-coc = import ./home/modules/neovim-coc.nix;
       neovim-tree-sitter = import ./home/modules/neovim-tree-sitter.nix;
@@ -46,13 +84,6 @@
       };
     in
     {
-      packages = {
-        inherit (pkgs) unionfarm pidgin-chime overlayfs-tools nix-script-ruby;
-        vimPlugins = {
-          inherit (pkgs.vimPlugins)
-            nvim-treesitter-playground
-            nvim-spellsitter;
-        };
-      };
+      packages = toPackages pkgDefs pkgs;
     });
 }
