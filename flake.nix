@@ -7,6 +7,7 @@
     overlay = final: prev: {
       unionfarm = final.pkgs.callPackage ./pkgs/unionfarm.nix { };
       pidgin-chime = final.pkgs.callPackage ./pkgs/pidgin-chime.nix { };
+      overlayfs-tools = final.pkgs.callPackage ./pkgs/overlayfs-tools.nix { };
       nix-script-ruby = final.pkgs.writeScriptBin "nix-script-ruby"
         (builtins.readFile ./scripts/nix-script-ruby);
 
@@ -46,7 +47,7 @@
     in
     {
       packages = {
-        inherit (pkgs) unionfarm pidgin-chime nix-script-ruby;
+        inherit (pkgs) unionfarm pidgin-chime overlayfs-tools nix-script-ruby;
         vimPlugins = {
           inherit (pkgs.vimPlugins)
             nvim-treesitter-playground
