@@ -5,6 +5,7 @@
 
   outputs = { self, nixpkgs, flake-utils }: {
     overlay = final: prev: {
+      unionfarm = final.pkgs.callPackage ./pkgs/unionfarm.nix { };
       pidgin-chime = final.pkgs.callPackage ./pkgs/pidgin-chime.nix { };
       nix-script-ruby = final.pkgs.writeScriptBin "nix-script-ruby"
         (builtins.readFile ./scripts/nix-script-ruby);
