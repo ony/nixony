@@ -7,6 +7,10 @@
   let
     lib = import ./lib { inherit (nixpkgs) lib; };
 
+    nixpkgsAdopted = oldName: path: final: final.lib.warnOnInstantiate
+      "${oldName} now present in nixpkgs as ${final.lib.concatStringsSep "." path}"
+      (final.lib.getAttrFromPath path final.pkgs);
+
     pkgDefs = {
       unionfarm = final: final.pkgs.callPackage ./pkgs/unionfarm.nix { };
       pidgin-chime = final: final.pkgs.callPackage ./pkgs/pidgin-chime.nix { };
@@ -25,9 +29,7 @@
           };
         };
 
-        nvim-spellsitter = final:
-          final.lib.warnOnInstantiate "nvim-spellsitter now present in nixpkgs as spellsitter-nvim"
-          final.pkgs.vimPlugins.spellsitter-nvim;
+        nvim-spellsitter = nixpkgsAdopted "nvim-spellsitter" ["vimPlugins" "spellsitter-nvim"];
       };
     };
   in {
