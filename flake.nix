@@ -17,6 +17,7 @@
       overlayfs-tools = final: final.pkgs.callPackage ./pkgs/overlayfs-tools.nix { };
       nix-script-ruby = final: final.pkgs.writeScriptBin "nix-script-ruby"
         (builtins.readFile ./scripts/nix-script-ruby);
+      ion-cli = final: final.pkgs.callPackage ./pkgs/ion-cli.nix { };
 
       vimPlugins = {
         nvim-treesitter-playground = nixpkgsAdopted "nvim-treesitter-playground" ["vimPlugins" "playground"];
