@@ -1,7 +1,7 @@
 {
   stdenv, fetchurl, autoreconfHook, pkg-config, which, pidgin, dbus,
   gnutls, farstream, libopus, protobufc, json-glib, libxml2, libsoup_2_4, discount,
-  imagemagick, gst_all_1, dbus-glib, python3
+  imagemagick, gst_all_1, dbus-glib, python3, lib
 }:
 let
   python' = python3.withPackages (ps: [ ps.dbus-python ]);
@@ -42,4 +42,6 @@ in stdenv.mkDerivation rec {
       -e "s@^\\(Exec\\)=\\([^/]\\)@\\1=$out/bin/\\2@" \
       chime-auth.desktop
   '';
+
+  meta.broken = lib.versionAtLeast discount.version "3.0";  # pidgin-chime-1.5 fails too with 3.x
 }

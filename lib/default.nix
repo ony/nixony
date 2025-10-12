@@ -42,6 +42,7 @@ let
   toFlatPackages = attrs@{ ... }: pkgset:
     lib.concatMapAttrs (name: value:
       if isAttrs value && ! isDerivation value then toFlatPackages value pkgset.${name}
+      else if pkgset.${name}.meta.broken then { }  # skip broken packages otherwise nix flake check will fail
       else { ${name} = pkgset.${name}; }
     ) attrs;
 

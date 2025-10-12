@@ -39,5 +39,6 @@
     in
     {
       packages = lib.toFlatPackages pkgDefs pkgs;
+      checks = lib.toFlatPackages pkgDefs pkgs;
     });
 }
