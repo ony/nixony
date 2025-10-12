@@ -1,14 +1,14 @@
 { rustPlatform, fetchCrate, lib }:
 rustPlatform.buildRustPackage rec {
   pname = "unionfarm";
-  version = "0.1.5";
+  version = "0.1.6";
 
   src = fetchCrate {
     inherit pname version;
-    hash = "sha256-5U1CRRuAaG4LJG92Ub/Wa6KaSzNLmXZhxEv4x/+wOoE=";
+    hash = "sha256-7SH1u+4dtDtVNTiTjRNne7TiG1AFcHn6m8n06g93asU=";
   };
 
-  cargoHash = "sha256-YjOpGRwl1ZkTMG4w149ywtB7VR1TQvEx98DCfkbNTnY=";
+  cargoHash = "sha256-3BSwaVFFA1SP9AG3KpRXUkspfeb36JUnLwLxQGVBo1s=";
   meta = {
     description = "A small utility for managing symlink farms";
     longDescription = ''
