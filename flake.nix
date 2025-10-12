@@ -19,16 +19,7 @@
         (builtins.readFile ./scripts/nix-script-ruby);
 
       vimPlugins = {
-        nvim-treesitter-playground = final: final.pkgs.vimUtils.buildVimPlugin {
-          name = "nvim-treesitter-playground";
-          src = final.pkgs.fetchFromGitHub {
-            owner = "nvim-treesitter";
-            repo = "playground";
-            rev = "787a7a8d4444e58467d6b3d4b88a497e7d494643";
-            hash = "sha256-YMINv064VzuzZLuQNY6HN3oCZvYjNQi6IMliQPTijfg=";
-          };
-        };
-
+        nvim-treesitter-playground = nixpkgsAdopted "nvim-treesitter-playground" ["vimPlugins" "playground"];
         nvim-spellsitter = nixpkgsAdopted "nvim-spellsitter" ["vimPlugins" "spellsitter-nvim"];
       };
     };
