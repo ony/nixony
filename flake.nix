@@ -25,16 +25,9 @@
           };
         };
 
-        nvim-spellsitter = final: final.pkgs.vimUtils.buildVimPlugin {
-          name = "nvim-spellsitter";
-          dontBuild = true;
-          src = final.pkgs.fetchFromGitHub {
-            owner = "lewis6991";
-            repo = "spellsitter.nvim";
-            rev = "3458915f9cccc7a4c95f272793790628fcd49bf7";
-            hash = "sha256-Tedv5x35MuLftWg0q8bYMM7Jhw7dMImeFP90IfdfJuY=";
-          };
-        };
+        nvim-spellsitter = final:
+          final.lib.warnOnInstantiate "nvim-spellsitter now present in nixpkgs as spellsitter-nvim"
+          final.pkgs.vimPlugins.spellsitter-nvim;
       };
     };
   in {
