@@ -39,12 +39,12 @@ let
   #     subpkgset = { ... };
   #   };
   # }
-  toPackages = attrs@{ ... }: pkgset:
-    mapAttrs (name: value:
-      if isAttrs value && ! isDerivation value then toPackages value pkgset.${name}
-      else pkgset.${name}
+  toFlatPackages = attrs@{ ... }: pkgset:
+    lib.concatMapAttrs (name: value:
+      if isAttrs value && ! isDerivation value then toFlatPackages value pkgset.${name}
+      else { ${name} = pkgset.${name}; }
     ) attrs;
 
 in {
-  inherit toOverlay toPackages;
+  inherit toOverlay toFlatPackages;
 }

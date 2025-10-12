@@ -52,6 +52,6 @@
       };
     in
     {
-      packages = lib.toPackages pkgDefs pkgs;
+      packages = lib.toFlatPackages pkgDefs pkgs;
     });
 }
