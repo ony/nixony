@@ -1,6 +1,6 @@
 {
-  pkgs, stdenv, fetchurl, autoreconfHook, pkg-config, which, pidgin, dbus,
-  gnutls, farstream, libopus, protobufc, json-glib, libxml2, libsoup, discount,
+  stdenv, fetchurl, autoreconfHook, pkg-config, which, pidgin, dbus,
+  gnutls, farstream, libopus, protobufc, json-glib, libxml2, libsoup_2_4, discount,
   imagemagick, gst_all_1, dbus-glib, python3
 }:
 let
@@ -18,7 +18,7 @@ in stdenv.mkDerivation rec {
   nativeBuildInputs = [ autoreconfHook pkg-config which imagemagick ];
   buildInputs = [
     # discount is needed for libmarkdown
-    pidgin dbus gnutls farstream libopus protobufc json-glib libxml2 libsoup
+    pidgin dbus gnutls farstream libopus protobufc json-glib libxml2 libsoup_2_4
     discount gst_all_1.gst-plugins-base dbus-glib python'
   ];
 
