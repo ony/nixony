@@ -19,10 +19,17 @@ in
       description = "Resulting customized nvim-treesitter plugin package.";
     };
 
+    type = mkOption {
+      type = types.enum [ "viml" "lua" ];
+      default = "viml";
+      description = "language for config";
+      example = literalExpression "lua";
+    };
+
     config = mkOption {
       type = types.str;
       default = "";
-      description = "vimscript for plugin initialization";
+      description = "VimL/Lua script for plugin initialization";
       example = literalExpression ''
         lua <<EOS
         require'nvim-treesitter.configs'.setup {
@@ -46,6 +53,11 @@ in
 
   config = mkIf cfg.enable {
     programs.neovim.tree-sitter.finalPackage = cfg.package.withPlugins cfg.grammarsView;
-    programs.neovim.plugins = [{ plugin = cfg.finalPackage; config = cfg.config; }];
+    programs.neovim.plugins = [
+      {
+        plugin = cfg.finalPackage;
+        inherit (cfg) type config;
+      }
+    ];
   };
 }
