@@ -4,38 +4,39 @@ let
   inherit (lib.attrsets) isDerivation;
 
   # Converts attrset of shared form (pkgDefs):
-  # {
-  #   pkg = final: final.pkgs.callPackage ...;
+  # lib.mkPkgDefs (final0: {
+  #   pkg = final0.callPackage ...;
   #   pkgset = {
-  #     subpkg = final: final.pkgs.callPackage ...;
+  #     subpkg = final0.callPackage ...;
   #     subpkgset = { ... };
   #   };
-  # }
+  #   rewrittenset = (final: prev: { x = prev.y; y = mypkg { x = final.x; }; });
+  # })
   #
   # To be suitable for overlays section of Flake:
   # final: prev: {
-  #   pkg = final.pkgs.callPackage ...;
+  #   pkg = final.callPackage ...;
   #   pkgset = prev.pkgset.extend (_final: _prev: {
-  #     subpkg = final.pkgs.callPackage ...;
+  #     subpkg = final.callPackage ...;
   #     subpkgset = prev'.subpkgset // { ... };
   #   });
+  #   rewrittenset = { x = prev.rewritten.y; y = mypkg { x = final.rewritten.x; }; };
   # }
   #
   # Will use .extend when available.
-  toOverlay = attrs@{ ... }: final0: prev0:
+  toOverlay = attrs@{ ... }: final: prev:
     let
-      extendWith = prev: value:
+      extendWith = final: prev: value:
         # will use wired in extend and fallback to just attrset override
-        let prev' = { extend = overlay: prev // overlay (assert false; {}) prev; } // prev;
-        in prev'.extend (_: prev'': walkIn prev'' value);
+        let prev_ = { extend = overlay: prev // overlay final prev; } // prev;
+        in prev_.extend (toOverlay value);
 
-      walkIn = prev: attrs: mapAttrs (toValue prev) attrs;
-      toValue = prev: name: value:
-        if isFunction value then value final0
+      toValue = final: prev: name: value:
+        if isFunction value then value final.${name} prev.${name}
         else if isDerivation value then value
-        else if isAttrs value then extendWith prev.${name} value
+        else if isAttrs value then extendWith final.${name} prev.${name} value
         else value;
-    in walkIn prev0 attrs;
+    in mapAttrs (toValue final prev) attrs;
 
   # Cherr-pick packages defined in original pkgDefs from pkgs after applying overlay
   # Will replicate hierarchy from pkgDefs. E.g.
@@ -54,5 +55,8 @@ let
     ) attrs;
 
 in {
-  inherit toOverlay toFlatPackages;
+  mkPkgDefs = f: {
+    toOverlay = final0: prev0: toOverlay (f final0) final0 prev0;
+    toFlatPackages = pkgs: toFlatPackages (f pkgs) pkgs;
+  };
 }
