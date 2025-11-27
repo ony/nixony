@@ -15,20 +15,27 @@ let
   # To be suitable for overlays section of Flake:
   # final: prev: {
   #   pkg = final.pkgs.callPackage ...;
-  #   pkgset = prev.pkgset // {
+  #   pkgset = prev.pkgset.extend (_final: _prev: {
   #     subpkg = final.pkgs.callPackage ...;
-  #     subpkgset = prev.pkgset.subpkgset // { ... };
-  #   };
+  #     subpkgset = prev'.subpkgset // { ... };
+  #   });
   # }
-  toOverlay = attrs@{ ... }: final: prev:
+  #
+  # Will use .extend when available.
+  toOverlay = attrs@{ ... }: final0: prev0:
     let
-      walkIn = nestedPrev: attrs: mapAttrs (toValue nestedPrev) attrs;
-      toValue = nestedPrev: name: value:
-        if isFunction value then value final
+      extendWith = prev: value:
+        # will use wired in extend and fallback to just attrset override
+        let prev' = { extend = overlay: prev // overlay (assert false; {}) prev; } // prev;
+        in prev'.extend (_: prev'': walkIn prev'' value);
+
+      walkIn = prev: attrs: mapAttrs (toValue prev) attrs;
+      toValue = prev: name: value:
+        if isFunction value then value final0
         else if isDerivation value then value
-        else if isAttrs value then nestedPrev.${name} // walkIn nestedPrev.${name} value
+        else if isAttrs value then extendWith prev.${name} value
         else value;
-    in walkIn prev attrs;
+    in walkIn prev0 attrs;
 
   # Cherr-pick packages defined in original pkgDefs from pkgs after applying overlay
   # Will replicate hierarchy from pkgDefs. E.g.
