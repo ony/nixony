@@ -26,7 +26,8 @@
     });
   in {
     inherit lib;
-    overlay = pkgDefs.toOverlay;
+    overlay = self.overlays.default;  # for compatibility
+    overlays.default = final: prev: pkgDefs.toOverlay final prev;
     homeManagerModules = {
       neovim-coc = import ./home/modules/neovim-coc.nix;
       neovim-tree-sitter = import ./home/modules/neovim-tree-sitter.nix;
