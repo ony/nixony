@@ -1,9 +1,12 @@
 {
   description = "Cherry-picked components from ony's Nix configs";
 
-  inputs.flake-utils.url = "flake:flake-utils";
+  inputs.flake-parts.url = "flake:flake-parts";
+  inputs.systems.url = "flake:systems";
+  inputs.home-manager.url = "flake:home-manager";
+  inputs.home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = inputs@{ self, nixpkgs, ... }:
   let
     lib = import ./lib { inherit (nixpkgs) lib; };
 
@@ -23,23 +26,36 @@
         nvim-spellsitter = nixpkgsAdopted "nvim-spellsitter" ["vimPlugins" "spellsitter-nvim"] final0;
       };
     });
-  in {
-    inherit lib;
-    overlay = self.overlays.default;  # for compatibility
-    overlays.default = final: prev: pkgDefs.toOverlay final prev;
-    homeManagerModules = {
-      neovim-coc = import ./home/modules/neovim-coc.nix;
-      neovim-tree-sitter = import ./home/modules/neovim-tree-sitter.nix;
-    };
-  } // flake-utils.lib.eachDefaultSystem (system:
-    let
-      pkgs = import nixpkgs {
-        inherit system;
-        overlays = [ self.overlay ];
+  in inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+    imports = [
+      inputs.home-manager.flakeModules.home-manager
+
+      # https://flake.parts/overlays.html?highlight=overlay#consuming-an-overlay
+      {
+        perSystem = { system, ... }: {
+          _module.args.pkgs = import inputs.nixpkgs {
+            inherit system;
+            overlays = [ self.overlays.default ];
+            config = { };
+          };
+        };
+      }
+    ];
+
+    flake = {
+      inherit lib;
+      overlays.default = pkgDefs.toOverlay;
+      homeModules = {
+        neovim-coc = import ./home/modules/neovim-coc.nix;
+        neovim-tree-sitter = import ./home/modules/neovim-tree-sitter.nix;
       };
-    in
-    {
+    };
+
+    systems = import inputs.systems;
+
+    perSystem = { pkgs, ... }: {
       packages = pkgDefs.toFlatPackages pkgs;
       checks = pkgDefs.toFlatPackages pkgs;
-    });
+    };
+  };
 }
