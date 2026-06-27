@@ -1,14 +1,14 @@
 { rustPlatform, fetchCrate, lib }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "ion-cli";
-  version = "0.11.0";
+  version = "0.12.1";
 
   src = fetchCrate {
     inherit (finalAttrs) pname version;
-    hash = "sha256-MCyEW8TS9VaeaEsnzu7Kivm2mNu7AxpE+sgo+yA7gyU=";
+    hash = "sha256-Rj2HyyQkRmLGlUYY4hfbny/MLRjwBOMGChFTFGXsbKA=";
   };
 
-  cargoHash = "sha256-HhwxFYHi4dcaDsNfL2buIjVQ5TrDMpszk2DC9WxoFNA=";
+  cargoHash = "sha256-7PM06Guc9PnUblOZfCspIVbKor9y8Imxewjacvdx7Yc=";
 
   checkFlags = [
     # failed to execute 'cargo clean': Os { code: 2, kind: NotFound, message: "No such file or directory" }
