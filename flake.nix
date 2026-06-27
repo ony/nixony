@@ -1,7 +1,7 @@
 {
   description = "Cherry-picked components from ony's Nix configs";
 
-  inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs.flake-utils.url = "flake:flake-utils";
 
   outputs = { self, nixpkgs, flake-utils }:
   let
