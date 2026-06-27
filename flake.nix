@@ -20,7 +20,6 @@
       ion-cli = final0.callPackage ./pkgs/ion-cli.nix { };
 
       vimPlugins = {
-        nvim-treesitter-playground = nixpkgsAdopted "nvim-treesitter-playground" ["vimPlugins" "playground"] final0;
         nvim-spellsitter = nixpkgsAdopted "nvim-spellsitter" ["vimPlugins" "spellsitter-nvim"] final0;
       };
     });
